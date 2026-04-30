@@ -25,7 +25,7 @@ const express        = require('express')
 const pino           = require('pino')
 
 // ── Config ────────────────────────────────────────────────────────────────────
-const PORT        = parseInt(process.env.WA_PORT    || '3000')
+const PORT        = parseInt(process.env.WA_PORT    || '9277')
 const API_KEY     = process.env.WA_API_KEY          || ''
 const AUTH_DIR    = process.env.WA_AUTH_DIR         || '/data/auth'
 const LOG_LEVEL   = process.env.LOG_LEVEL           || 'info'

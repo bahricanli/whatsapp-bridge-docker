@@ -9,10 +9,10 @@ services:
 
     ports:
       # Dışarıya açık port — reverse proxy (nginx/traefik) arkasında kullanımı önerilir
-      - "${WA_HOST_PORT:-3000}:3000"
+      - "${WA_HOST_PORT:-9277}:9277"
 
     environment:
-      WA_PORT:        "3000"
+      WA_PORT:        "9277"
       WA_API_KEY:     "${WA_API_KEY}"
       WA_AUTH_DIR:    "/data/auth"
       WA_MAX_RETRIES: "${WA_MAX_RETRIES:-10}"
@@ -23,7 +23,7 @@ services:
       - wa_auth:/data/auth
 
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:3000/status"]
+      test: ["CMD", "wget", "-qO-", "http://localhost:9277/status"]
       interval: 30s
       timeout:  5s
       retries:  3
