@@ -1,0 +1,17 @@
+{
+  "name": "whatsapp-bridge",
+  "version": "1.0.0",
+  "description": "Standalone WhatsApp REST bridge via Baileys",
+  "main": "bridge.js",
+  "scripts": {
+    "start": "node bridge.js",
+    "dev": "node --watch bridge.js"
+  },
+  "dependencies": {
+    "@whiskeysockets/baileys": "6.7.18",
+    "express": "4.21.2",
+    "pino": "9.5.0",
+    "pino-pretty": "13.0.0",
+    "qrcode": "1.5.4"
+  }
+}

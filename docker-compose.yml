@@ -1,0 +1,34 @@
+services:
+  whatsapp-bridge:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: whatsapp-bridge:latest
+    container_name: whatsapp-bridge
+    restart: unless-stopped
+
+    ports:
+      # Dışarıya açık port — reverse proxy (nginx/traefik) arkasında kullanımı önerilir
+      - "${WA_HOST_PORT:-3000}:3000"
+
+    environment:
+      WA_PORT:        "3000"
+      WA_API_KEY:     "${WA_API_KEY}"
+      WA_AUTH_DIR:    "/data/auth"
+      WA_MAX_RETRIES: "${WA_MAX_RETRIES:-10}"
+      LOG_LEVEL:      "${LOG_LEVEL:-info}"
+
+    volumes:
+      # WhatsApp oturum dosyaları — container yeniden başlatıldığında QR tekrar taranmaz
+      - wa_auth:/data/auth
+
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/status"]
+      interval: 30s
+      timeout:  5s
+      retries:  3
+      start_period: 15s
+
+volumes:
+  wa_auth:
+    driver: local
