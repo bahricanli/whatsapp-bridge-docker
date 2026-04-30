@@ -189,7 +189,7 @@ async function startBridge() {
     sock = makeWASocket({
         version,
         auth:              state,
-        printQRInTerminal: true,
+        printQRInTerminal: false,
         logger:            pino({ level: 'silent' }),  // suppress Baileys internal noise
     })
 
@@ -242,7 +242,7 @@ startBridge().catch(err => {
     process.exit(1)
 })
 
-app.listen(PORT, '0.0.0.0', () => {
+app.listen(PORT, '::', () => {
     logger.info({
         port:     PORT,
         auth:     API_KEY ? 'enabled' : 'DISABLED (set WA_API_KEY!)',
