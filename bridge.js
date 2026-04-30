@@ -19,9 +19,10 @@ const {
     DisconnectReason,
     fetchLatestBaileysVersion,
 } = require('@whiskeysockets/baileys')
-const qrcode   = require('qrcode')
-const express  = require('express')
-const pino     = require('pino')
+const qrcode         = require('qrcode')
+const qrcodeTerminal = require('qrcode-terminal')
+const express        = require('express')
+const pino           = require('pino')
 
 // ── Config ────────────────────────────────────────────────────────────────────
 const PORT        = parseInt(process.env.WA_PORT    || '3000')
@@ -200,7 +201,11 @@ async function startBridge() {
         if (qr) {
             currentQr    = qr
             currentQrPng = await qrcode.toDataURL(qr)
-            logger.info('QR code ready — GET /qr or /qr.png to view')
+            // Terminale bas — `docker compose logs -f` ile telefondan taranabilir
+            console.log('\n[QR] WhatsApp > Bağlı Cihazlar > Cihaz Ekle:\n')
+            qrcodeTerminal.generate(qr, { small: true })
+            console.log('')
+            logger.info('QR code ready — /qr.png adresinden de görüntüleyebilirsiniz')
         }
 
         if (connection === 'open') {
