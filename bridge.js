@@ -72,12 +72,17 @@ app.use(authMiddleware)
 /**
  * Normalize a phone number to WhatsApp JID.
  * Accepts: 905XXXXXXXXX  +90...  090...  05...  5...
+ *
+ * Turkish mobile examples:
+ *   05051234567  →  905051234567  (prepend '9', keep leading '0' → country code '90')
+ *   5051234567   →  905051234567  (prepend '90')
+ *   905051234567 →  905051234567  (already international, unchanged)
  */
 function toJid(phone) {
     let digits = String(phone).replace(/\D/g, '')
 
     if (digits.startsWith('00')) digits = digits.slice(2)
-    if (digits.startsWith('05') && digits.length === 11) digits = '9' + digits.replace(/^0/, '')
+    if (digits.startsWith('05') && digits.length === 11) digits = '9' + digits  // '9'+'05...' = '905...' (country code 90)
     if (digits.startsWith('5')  && digits.length === 10) digits = '90' + digits
 
     return digits + '@s.whatsapp.net'
