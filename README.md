@@ -16,14 +16,8 @@ docker compose up -d --build
 
 ## İlk bağlantı (QR tarama)
 
-Container ayağa kalktıktan sonra QR kodu tara:
+Container ayağa kalktıktan sonra QR kodu terminalde görüntüle:
 
-**Tarayıcıdan:**
-```
-http://SUNUCU_IP:3000/qr.png
-```
-
-**Terminalde:**
 ```bash
 docker compose logs -f
 ```
@@ -36,74 +30,107 @@ Tarama tamamlandığında oturum `/data/auth` volume'una kaydedilir. Container y
 
 ## API
 
-Tüm isteklerde `Authorization: Bearer <WA_API_KEY>` header'ı gerekir.
+Tüm isteklerde (GET /status hariç) `Authorization: Bearer <WA_API_KEY>` veya `X-Api-Key: <WA_API_KEY>` header'ı gerekir.
 
-### `GET /status`
+### `GET /status` — Auth gerektirmez
 ```json
 {
   "ok": true,
   "connected": true,
-  "qr_pending": false,
-  "uptime_s": 3600,
-  "retry_count": 0
+  "channels": 1
 }
 ```
 
-### `GET /qr` — Base64 PNG
+### `GET /channels` — Takip edilen kanalları listele
 ```json
-{ "qr": "data:image/png;base64,..." }
-```
-
-### `GET /qr.png` — Direkt PNG resim
-
-### `POST /send`
-```json
-// Request
-{ "to": "905551234567", "text": "Doğrulama kodunuz: 1234" }
-
-// Response
-{ "ok": true, "jid": "905551234567@s.whatsapp.net" }
-```
-
-### `POST /send-bulk`
-```json
-// Request
-[
-  { "to": "905551234567", "text": "Mesaj 1" },
-  { "to": "905559876543", "text": "Mesaj 2" }
-]
-
-// Response
 {
-  "results": [
-    { "to": "905551234567", "ok": true, "jid": "905551234567@s.whatsapp.net" },
-    { "to": "905559876543", "ok": true, "jid": "905559876543@s.whatsapp.net" }
+  "ok": true,
+  "channels": [
+    {
+      "jid": "120363430826890742@newsletter",
+      "name": "Kanal Adı",
+      "description": "...",
+      "subscriberCount": 100,
+      "role": "admin",
+      "picture": "/m1/v/t24/...",
+      "createdAt": "2026-01-01T00:00:00.000Z",
+      "lastUpdated": "2026-06-26T10:00:00.000Z"
+    }
   ]
 }
 ```
 
+### `POST /channels/follow` — Kanala katıl
+
+**Invite URL ile:**
+```json
+{ "invite": "https://whatsapp.com/channel/0029VbCDO4pEKyZQKQqzl13B" }
+```
+
+**JID ile:**
+```json
+{ "jid": "120363430826890742@newsletter" }
+```
+
+### `POST /channels/unfollow` — Kanalı bırak
+```json
+{ "jid": "120363430826890742@newsletter" }
+```
+
+### `GET /channels/stats?jid=...` — Tek kanal istatistiği
+```
+GET /channels/stats?jid=120363430826890742%40newsletter
+```
+> `@` işaretini URL encode edin: `@` → `%40`
+
+### `POST /channels/refresh` — Tüm kanalları yenile
+
+Otomatik olarak her `WA_CHANNEL_REFRESH_MIN` dakikada da çalışır.
+
+### `POST /channels/post` — Kanala post yap
+
+> Yalnızca `role: "admin"` veya `role: "owner"` olan kanallarda çalışır.
+
+```json
+{ "jid": "120363430826890742@newsletter", "text": "Yeni yayın başladı!" }
+```
+
+Resim ile:
+```json
+{
+  "jid": "120363430826890742@newsletter",
+  "text": "Açıklama",
+  "imageUrl": "https://example.com/kapak.jpg"
+}
+```
+
+### `POST /send` — Kullanıcıya direkt mesaj gönder
+```json
+// Request
+{ "jid": "905551234567@s.whatsapp.net", "text": "Doğrulama kodunuz: 1234" }
+
+// Response
+{ "ok": true }
+```
+
 ---
 
-## Kabul edilen telefon numarası formatları
+## Gelen aramaları reddetme
 
-| Giriş          | Normalize edilmiş |
-|----------------|-------------------|
-| `905551234567` | `905551234567`    |
-| `+905551234567`| `905551234567`    |
-| `0905551234567`| `905551234567`    |
-| `05551234567`  | `905551234567`    |
-| `5551234567`   | `905551234567`    |
+Gelen sesli aramalar otomatik olarak reddedilir ve arayana `WA_CALL_REJECT_MSG` içeriği gönderilir.
 
 ---
 
 ## Ortam değişkenleri
 
-| Değişken         | Varsayılan   | Açıklama                                   |
-|------------------|--------------|--------------------------------------------|
-| `WA_API_KEY`     | _(boş)_      | Bearer token; boşsa auth devre dışı        |
-| `WA_HOST_PORT`   | `3000`       | Host'a bağlanan port                        |
-| `WA_MAX_RETRIES` | `10`         | Yeniden bağlanma denemesi                  |
-| `LOG_LEVEL`      | `info`       | `trace / debug / info / warn / error`      |
+| Değişken                | Varsayılan                                    | Açıklama                                           |
+|-------------------------|-----------------------------------------------|----------------------------------------------------|
+| `WA_API_KEY`            | _(boş)_                                       | Bearer token; boşsa auth devre dışı                |
+| `WA_HOST_PORT`          | `3000`                                        | Host'a bağlanan port                               |
+| `WA_MAX_RETRIES`        | `10`                                          | Yeniden bağlanma denemesi                          |
+| `WA_CHANNEL_REFRESH_MIN`| `30`                                          | Kanal istatistik yenileme aralığı (dakika)         |
+| `WA_CALL_REJECT_MSG`    | _(varsayılan Türkçe mesaj)_                   | Gelen aramalarda gönderilecek otomatik yanıt       |
+| `LOG_LEVEL`             | `info`                                        | `trace / debug / info / warn / error`              |
 
 ---
 
