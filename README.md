@@ -2,6 +2,8 @@
 
 Baileys tabanlı, Docker üzerinde çalışan standalone WhatsApp REST API servisi.
 
+📖 **Tam API referansı için → [API.md](./API.md)**
+
 ---
 
 ## Kurulum
@@ -28,115 +30,39 @@ Tarama tamamlandığında oturum `/data/auth` volume'una kaydedilir. Container y
 
 ---
 
-## API
+## Endpoint'ler
 
-Tüm isteklerde (GET /status hariç) `Authorization: Bearer <WA_API_KEY>` veya `X-Api-Key: <WA_API_KEY>` header'ı gerekir.
+| Method | Path | Açıklama | Auth |
+|--------|------|----------|------|
+| `GET` | `/status` | Bağlantı durumu | ✗ |
+| `GET` | `/channels` | Takip edilen kanalları listele | ✓ |
+| `POST` | `/channels/follow` | Kanala katıl | ✓ |
+| `POST` | `/channels/unfollow` | Kanalı bırak | ✓ |
+| `GET` | `/channels/stats` | Tek kanal istatistiği | ✓ |
+| `POST` | `/channels/refresh` | Tüm kanalları yenile | ✓ |
+| `POST` | `/channels/post` | Kanala post yap (admin/owner) | ✓ |
+| `POST` | `/send` | Kullanıcıya direkt mesaj gönder | ✓ |
 
-### `GET /status` — Auth gerektirmez
-```json
-{
-  "ok": true,
-  "connected": true,
-  "channels": 1
-}
-```
+Tüm isteklerde `Authorization: Bearer <WA_API_KEY>` veya `X-Api-Key: <WA_API_KEY>` header'ı gerekir.
 
-### `GET /channels` — Takip edilen kanalları listele
-```json
-{
-  "ok": true,
-  "channels": [
-    {
-      "jid": "120363430826890742@newsletter",
-      "name": "Kanal Adı",
-      "description": "...",
-      "subscriberCount": 100,
-      "role": "admin",
-      "picture": "/m1/v/t24/...",
-      "createdAt": "2026-01-01T00:00:00.000Z",
-      "lastUpdated": "2026-06-26T10:00:00.000Z"
-    }
-  ]
-}
-```
-
-### `POST /channels/follow` — Kanala katıl
-
-**Invite URL ile:**
-```json
-{ "invite": "https://whatsapp.com/channel/0029VbCDO4pEKyZQKQqzl13B" }
-```
-
-**JID ile:**
-```json
-{ "jid": "120363430826890742@newsletter" }
-```
-
-### `POST /channels/unfollow` — Kanalı bırak
-```json
-{ "jid": "120363430826890742@newsletter" }
-```
-
-### `GET /channels/stats?jid=...` — Tek kanal istatistiği
-```
-GET /channels/stats?jid=120363430826890742%40newsletter
-```
-> `@` işaretini URL encode edin: `@` → `%40`
-
-### `POST /channels/refresh` — Tüm kanalları yenile
-
-Otomatik olarak her `WA_CHANNEL_REFRESH_MIN` dakikada da çalışır.
-
-### `POST /channels/post` — Kanala post yap
-
-> Yalnızca `role: "admin"` veya `role: "owner"` olan kanallarda çalışır.
-
-```json
-{ "jid": "120363430826890742@newsletter", "text": "Yeni yayın başladı!" }
-```
-
-Resim ile:
-```json
-{
-  "jid": "120363430826890742@newsletter",
-  "text": "Açıklama",
-  "imageUrl": "https://example.com/kapak.jpg"
-}
-```
-
-### `POST /send` — Kullanıcıya direkt mesaj gönder
-```json
-// Request
-{ "jid": "905551234567@s.whatsapp.net", "text": "Doğrulama kodunuz: 1234" }
-
-// Response
-{ "ok": true }
-```
+Detaylı açıklamalar, istek/yanıt örnekleri ve hata kodları için → **[API.md](./API.md)**
 
 ---
 
-## Gelen aramaları reddetme
+## Temel ortam değişkenleri
 
-Gelen sesli aramalar otomatik olarak reddedilir ve arayana `WA_CALL_REJECT_MSG` içeriği gönderilir.
+| Değişken | Varsayılan | Açıklama |
+|----------|------------|----------|
+| `WA_API_KEY` | _(boş)_ | Bearer token; boşsa auth devre dışı |
+| `WA_HOST_PORT` | `3000` | Host'a bağlanan port |
+| `WA_CHANNEL_REFRESH_MIN` | `30` | Kanal yenileme aralığı (dakika) |
+| `WA_CALL_REJECT_MSG` | _(varsayılan Türkçe mesaj)_ | Gelen aramalarda otomatik yanıt |
 
----
-
-## Ortam değişkenleri
-
-| Değişken                | Varsayılan                                    | Açıklama                                           |
-|-------------------------|-----------------------------------------------|----------------------------------------------------|
-| `WA_API_KEY`            | _(boş)_                                       | Bearer token; boşsa auth devre dışı                |
-| `WA_HOST_PORT`          | `3000`                                        | Host'a bağlanan port                               |
-| `WA_MAX_RETRIES`        | `10`                                          | Yeniden bağlanma denemesi                          |
-| `WA_CHANNEL_REFRESH_MIN`| `30`                                          | Kanal istatistik yenileme aralığı (dakika)         |
-| `WA_CALL_REJECT_MSG`    | _(varsayılan Türkçe mesaj)_                   | Gelen aramalarda gönderilecek otomatik yanıt       |
-| `LOG_LEVEL`             | `info`                                        | `trace / debug / info / warn / error`              |
+Tüm değişkenler için → **[API.md — Ortam Değişkenleri](./API.md#ortam-değişkenleri-env)**
 
 ---
 
 ## Nginx reverse proxy (önerilen)
-
-Servisi doğrudan 3000 portuyla açmak yerine Nginx arkasına alıp HTTPS ekleyin:
 
 ```nginx
 server {

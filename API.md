@@ -1,5 +1,7 @@
 # WhatsApp Bridge — API Dokümantasyonu
 
+← **Kurulum ve genel bilgiler için → [README.md](./README.md)**
+
 **Sunucu:** `http://<SUNUCU_IP>:3000`
 **Versiyon:** Baileys 6.7.23 · Node.js 20
 **Son Güncelleme:** 2026-06-26
