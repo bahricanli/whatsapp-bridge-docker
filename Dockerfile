@@ -1,12 +1,12 @@
 FROM node:20-alpine
 
-# Dependencies for Baileys native modules
-RUN apk add --no-cache python3 make g++ git
+# ffmpeg: OGG/OPUS ses notlarını Whisper için WAV'a çevirir
+RUN apk add --no-cache python3 make g++ git ffmpeg
 
 WORKDIR /app
 
 COPY package.json ./
-RUN npm install --omit=dev
+RUN npm install
 
 COPY bridge.js ./
 
