@@ -1,7 +1,7 @@
 FROM node:20-alpine
 
-# ffmpeg: OGG/OPUS ses notlarını Whisper için WAV'a çevirir
-RUN apk add --no-cache python3 make g++ git ffmpeg
+# Dependencies for Baileys native modules
+RUN apk add --no-cache python3 make g++ git
 
 WORKDIR /app
 
